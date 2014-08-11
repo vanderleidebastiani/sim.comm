@@ -1,0 +1,35 @@
+#############
+
+# sim.comm
+
+#############
+
+## Description
+
+# Simulations of metacommunities.
+
+#############
+
+require(ape)
+require(geiger)
+
+#############
+
+## Usage
+
+sim.comm(tree,SimClus=0.9,SimOver=0.9,limit=0,Ncomm=30,Nind=20,Nsp=5,filter=0.8,stop="abundance",LNDist=TRUE,pattern,gradual=FALSE)
+
+## Arguments
+
+# tree - A phylo object.
+# SimClus - Phylogenetic similarity for phylogenetic clustering.
+# SimOver - Phylogenetic similarity for phylogenetic overdispersion.
+# limit - Limit to the gradual option.
+# Ncomm - Number of communities.
+# Nind - Number of individuals in each community.
+# Nsp - Richness in each community.
+# filter - Frequency of restriction by the filter.
+# stop - Stopping criterion, "richness" or "abundance".
+# LNDist - Logical argument. Use lognormal species abundance distribution.
+# pattern - Name or vector with the pattern for simulate, "clustering","random","overdispersion". If is a vector, it must be the same length that the number of communities.
+# gradual - Logical argument. Use gradual filter from SimClus or SimOver to limit.
