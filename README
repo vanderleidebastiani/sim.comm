@@ -1,19 +1,11 @@
-#############
-
 # sim.comm
-
-#############
 
 ## Description
 
 # Simulations of metacommunities.
 
-#############
-
 require(ape)
 require(geiger)
-
-#############
 
 ## Usage
 
