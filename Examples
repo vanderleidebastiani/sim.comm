@@ -1,0 +1,15 @@
+require(plotrix)
+
+n_species=100
+
+tree<-sim.bdtree(b=0.1, d=0,stop="taxa",n=n_species)
+	for (y in 1: length(tree$edge.length)) {
+		if (tree$edge.length[y] == 0.00000000 ) 
+		tree$edge.length[y] = 0.01
+	} 
+tree$tip.label=sprintf("Sp_%.3d",1:length(tree$tip.label))
+tree
+
+SIM<-sim.comm(tree,SimClus=0.9,SimOver=0.8,limit=1,Ncomm=60,Nind=30,Nsp=10,filter=0.99,stop="richness",LNDist=FALSE,pattern="clustering",gradual=FALSE)
+rowSums(decostand(SIM$ResSim,method="pa"))
+rowSums(SIM$ResSim)
