@@ -1,0 +1,96 @@
+sim.comm<-function(tree,SimClus=0.9,SimOver=0.9,limit=0,Ncomm=30,Nind=20,Nsp=5,filter=0.8,stop="abundance",LNDist=TRUE,pattern,gradual=FALSE){
+	if(length(pattern)==1){
+		pattern=rep(pattern,Ncomm)
+	}
+	Nsppool=length(tree$tip.label)
+	disttree<-cophenetic(tree)
+	simtree<-1-(disttree/max(disttree))
+	probAbun<-NULL
+	if(LNDist==TRUE){
+		abundance<-rlnorm(Nsppool)
+		probAbun<-abundance/sum(abundance)
+		names(probAbun)=tree$tip.label
+	}
+	gradient1<-rep(SimClus,Ncomm)
+	gradient2<-rep(SimOver,Ncomm)
+	if(gradual==TRUE){
+		gradient1<-seq(SimClus,limit,length.out=Ncomm)
+		gradient2<-seq(SimOver,limit,length.out=Ncomm)
+	}
+	ResSim<-matrix(0,Ncomm,Nsppool)
+	colnames(ResSim)=tree$tip.label
+	rownames(ResSim)=sprintf("Comm_%.3d",1:dim(ResSim)[1])
+	spReference<-matrix(0,Ncomm,1)
+	colnames(spReference)=c("Sp_ref")
+	rownames(spReference)=sprintf("Comm_%.3d",1:dim(spReference)[1])
+	probOut<-(1-filter)/Nsppool
+	prob2<-array(0,dim=Nsppool)
+	names(prob2)=tree$tip.label
+	prob2=rep(probOut,Nsppool)
+	for (i in 1:Ncomm){
+		prob1<-array(1/Nsppool,dim=Nsppool)
+		names(prob1)=tree$tip.label
+		prob<-rowSums(cbind(prob1,prob2))
+		PROB<-prob
+		if(LNDist ==TRUE){
+			PROB<-prob*probAbun
+		}
+		PROB<-PROB/sum(PROB)
+		reference<-matrix(0,Nsppool,1)		
+		rownames(reference)=tree$tip.label
+		SPP<-character()
+		j=0
+		repeat{
+			j=j+1
+			reference<-cbind(reference,matrix(0,Nsppool,1))
+			Sp_Ref<-sample(tree$tip.label,1,replace=TRUE,prob=PROB)
+			SPP<-c(SPP,Sp_Ref)
+			SimilarRef<-simtree[which(colnames(simtree)==Sp_Ref),]
+			if(as.character(pattern[i])=="overdispersion"){
+				QuantileSimilar<-quantile(SimilarRef,probs=gradient2[i])
+			}
+			else
+			{
+				QuantileSimilar<-quantile(SimilarRef,probs=gradient1[i])
+			}
+			prob1<-array(0,dim=Nsppool)
+			names(prob1)=tree$tip.label
+			if(as.character(pattern[i])=="clustering"){
+				select<-unique(names(SimilarRef[SimilarRef>=QuantileSimilar]))
+				SELECT<-select
+				if(length(SPP)==1){
+					probIn<-filter/length(SELECT)
+					prob1[SELECT]=probIn
+					prob<-rowSums(cbind(prob1,prob2))
+				}
+				else{
+					prob<-prob
+				}
+			}
+			if(as.character(pattern[i])=="overdispersion"){
+				select<-unique(c(SPP,names(SimilarRef[SimilarRef<=QuantileSimilar])))
+				reference[select,j]=1
+				SELECT<-unique(c(SPP,rownames(reference[rowSums(as.matrix(reference[,1:j]))>=j,])))
+				probIn<-filter/length(SELECT)
+				prob1[SELECT]=probIn
+				prob<-rowSums(cbind(prob1,prob2))
+			}
+			if(as.character(pattern[i])=="random"){
+				prob<-array(1/Nsppool,dim=Nsppool)				
+			}
+			PROB<-prob
+			if(LNDist ==TRUE){
+				PROB<-prob*probAbun
+				}
+			PROB<-PROB/sum(PROB)
+			if(stop=="richness"){
+				if (length(unique(SPP))==Nsp) break
+				}
+			if(stop=="abundance"){
+				if (length(SPP)==Nind) break
+				}		
+			}
+		ResSim[i,match(names(table(SPP)),names(ResSim[i,]))]<-table(SPP)
+	}
+return(list(ResSim = ResSim, probAbun = probAbun))
+}
